@@ -1,0 +1,117 @@
+# DeployPilot - Target Repositories Configuration Template
+# Each target application must be explicitly defined and enabled here.
+# Deployment root is strictly enforced: all paths must reside within ALLOWED_DEPLOYMENT_ROOT.
+
+version: 1
+repositories:
+  - id: "token-calculator"
+    name: "token-calculator"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/token-calculator.git"
+    path: "/volume1/docker/token-calculator"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "token-calculator"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "ai-evolution-guide"
+    name: "ai-evolution-guide"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/ai-evolution-guide.git"
+    path: "/volume1/docker/ai-evolution-guide"
+    branch: "master"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "ai-evolution-guide"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "portfolio"
+    name: "portfolio"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/portfolio.git"
+    path: "/volume1/docker/portfolio"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "portfolio"
+    enabled: false
+    timeout_seconds: 600
+    health_check:
+      endpoint: "/health"
+      port: 80
+      timeout_seconds: 60
+
+  - id: "file2MD"
+    name: "file2MD"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/file2MD.git"
+    path: "/volume1/docker/file2MD"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "file2md"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "seald"
+    name: "seald"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/seald.git"
+    path: "/volume1/docker/seald"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "seald"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "trove-ecommerce-recommendation"
+    name: "trove-ecommerce-recommendation"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/trove-ecommerce-recommendation.git"
+    path: "/volume1/docker/trove-ecommerce-recommendation"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "trove-ecommerce-recommendation"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "vocab-learner"
+    name: "vocab-learner"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/vocab-learner.git"
+    path: "/volume1/docker/vocab-learner"
+    branch: "feat/gemini-llm-working"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "vocab-learner"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "Google-Tasks-REST-API"
+    name: "Google-Tasks-REST-API"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/Google-Tasks-REST-API.git"
+    path: "/volume1/docker/Google-Tasks-REST-API"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "google-tasks-rest-api"
+    enabled: false
+    timeout_seconds: 600
+
+  - id: "youtube-downloader"
+    name: "youtube-downloader"
+    owner: "vajapravin"
+    expected_remote: "https://github.com/vajapravin/youtube-downloader.git"
+    path: "/volume1/docker/youtube-downloader"
+    branch: "main"
+    compose_files:
+      - "docker-compose.yml"
+    compose_project_name: "youtube-downloader"
+    enabled: false
+    timeout_seconds: 600
