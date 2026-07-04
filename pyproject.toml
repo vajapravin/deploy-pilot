@@ -61,6 +61,8 @@ ignore = [
     "S105",   # hardcoded test secrets/passwords in tests
     "S106",   # hardcoded dummy passwords/secrets in test args
     "S108",   # /tmp path references in unit test fixtures
+    "S603",   # subprocess calls in test fixtures
+    "S607",   # starting a process with a partial executable path in tests
 ]
 
 [tool.ruff.lint.isort]
