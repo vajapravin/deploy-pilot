@@ -15,7 +15,7 @@ class HealthCheckConfig(BaseModel):
 
     endpoint: str = Field(default="/health", description="HTTP health check path")
     port: int = Field(default=80, ge=1, le=65535, description="Port to query on target container")
-    timeout_seconds: int = Field(default=60, ge=5, le=300, description="Health check timeout")
+    timeout_seconds: int = Field(default=60, ge=1, le=300, description="Health check timeout")
     interval_seconds: int = Field(default=5, ge=1, le=60, description="Polling interval")
     expected_status: int = Field(default=200, ge=200, le=399, description="Expected HTTP status")
 
