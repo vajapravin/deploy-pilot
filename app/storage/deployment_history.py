@@ -8,6 +8,8 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
+from app.models.deployment import DeploymentRecord, DeploymentState
+
 
 class DeploymentHistoryStorage:
     """Manages persistent SQLite storage with WAL mode for concurrency and deduplication."""
@@ -140,3 +142,125 @@ class DeploymentHistoryStorage:
                 (max_records,),
             )
             return cur.rowcount
+
+    def create_deployment(self, record: DeploymentRecord) -> None:
+        """Persist a new deployment record."""
+        with self.transaction() as cur:
+            cur.execute(
+                """
+                INSERT INTO deployments (
+                    id, delivery_id, repository_id, branch, requested_commit,
+                    deployed_commit, state, created_at, started_at, completed_at,
+                    duration_seconds, docker_exit_code, health_status, error_summary, logs
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.id,
+                    record.delivery_id,
+                    record.repository_id,
+                    record.branch,
+                    record.requested_commit,
+                    record.deployed_commit,
+                    record.state.value,
+                    record.created_at,
+                    record.started_at,
+                    record.completed_at,
+                    record.duration_seconds,
+                    record.docker_exit_code,
+                    record.health_status,
+                    record.error_summary,
+                    record.logs,
+                ),
+            )
+
+    def update_deployment(self, record: DeploymentRecord) -> None:
+        """Update an existing deployment record with latest state and diagnostics."""
+        with self.transaction() as cur:
+            cur.execute(
+                """
+                UPDATE deployments SET
+                    deployed_commit = ?,
+                    state = ?,
+                    started_at = ?,
+                    completed_at = ?,
+                    duration_seconds = ?,
+                    docker_exit_code = ?,
+                    health_status = ?,
+                    error_summary = ?,
+                    logs = ?
+                WHERE id = ?
+                """,
+                (
+                    record.deployed_commit,
+                    record.state.value,
+                    record.started_at,
+                    record.completed_at,
+                    record.duration_seconds,
+                    record.docker_exit_code,
+                    record.health_status,
+                    record.error_summary,
+                    record.logs,
+                    record.id,
+                ),
+            )
+
+    def get_deployment(self, deployment_id: str) -> DeploymentRecord | None:
+        """Retrieve a deployment record by ID."""
+        with self.transaction() as cur:
+            cur.execute("SELECT * FROM deployments WHERE id = ?", (deployment_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return self._row_to_record(row)
+
+    def list_deployments(
+        self,
+        repository_id: str | None = None,
+        limit: int = 50,
+    ) -> list[DeploymentRecord]:
+        """List recent deployments, optionally filtered by repository."""
+        with self.transaction() as cur:
+            if repository_id:
+                cur.execute(
+                    """
+                    SELECT * FROM deployments
+                    WHERE repository_id = ?
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (repository_id, limit),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT * FROM deployments
+                    ORDER BY created_at DESC
+                    LIMIT ?
+                    """,
+                    (limit,),
+                )
+            return [self._row_to_record(row) for row in cur.fetchall()]
+
+    def reconcile_interrupted_deployments(self) -> int:
+        """On startup, mark non-terminal deployments as interrupted by server restart."""
+        now = datetime.now(UTC).isoformat()
+        with self.transaction() as cur:
+            cur.execute(
+                """
+                UPDATE deployments
+                SET state = ?, completed_at = ?, error_summary = ?
+                WHERE state NOT IN ('succeeded', 'failed', 'superseded', 'cancelled')
+                """,
+                (
+                    DeploymentState.FAILED.value,
+                    now,
+                    "interrupted_by_server_restart",
+                ),
+            )
+            return cur.rowcount
+
+    def _row_to_record(self, row: sqlite3.Row) -> DeploymentRecord:
+        """Convert a database row into a validated DeploymentRecord."""
+        data = dict(row)
+        data["state"] = DeploymentState(data["state"])
+        return DeploymentRecord.model_validate(data)
