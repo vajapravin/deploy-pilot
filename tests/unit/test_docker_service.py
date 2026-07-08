@@ -165,10 +165,11 @@ async def test_poll_http_health_check_success() -> None:
     service = DockerService()
     hc = HealthCheckConfig(endpoint="/ready", port=8080, timeout_seconds=5, interval_seconds=1)
 
-    async def _mock_get(url: str) -> httpx.Response:
-        return httpx.Response(status_code=200)
+    mock_client = AsyncMock()
+    mock_client.get.return_value = httpx.Response(status_code=200)
+    mock_client.__aenter__.return_value = mock_client
 
-    with patch("httpx.AsyncClient.get", side_effect=_mock_get):
+    with patch("httpx.AsyncClient", return_value=mock_client):
         status = await service._poll_http_health_check(hc)
         assert status == "healthy"
 
@@ -179,11 +180,12 @@ async def test_poll_http_health_check_timeout() -> None:
     service = DockerService()
     hc = HealthCheckConfig(endpoint="/ready", port=8080, timeout_seconds=1, interval_seconds=1)
 
-    async def _mock_get_fail(url: str) -> httpx.Response:
-        raise httpx.ConnectError("connection refused")
+    mock_client_fail = AsyncMock()
+    mock_client_fail.get.side_effect = httpx.ConnectError("connection refused")
+    mock_client_fail.__aenter__.return_value = mock_client_fail
 
     with (
-        patch("httpx.AsyncClient.get", side_effect=_mock_get_fail),
+        patch("httpx.AsyncClient", return_value=mock_client_fail),
         pytest.raises(HealthCheckFailedError, match="Health check failed"),
     ):
         await service._poll_http_health_check(hc)
