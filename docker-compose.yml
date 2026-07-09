@@ -1,0 +1,40 @@
+services:
+  deploy-pilot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: deploy-pilot:latest
+    container_name: deploy-pilot
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8088}:8088"
+    env_file:
+      - .env
+    environment:
+      - PORT=8088
+      - HOST=0.0.0.0
+      - DEPLOYMENT_ROOT=${DEPLOYMENT_ROOT:-/volume1/docker}
+      - CONFIG_PATH=/app/config/repositories.yaml
+      - DATABASE_PATH=/app/data/deployments.db
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+    volumes:
+      # Access host Docker daemon for compose operations
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount deployment target root directory (preserves identical path inside container)
+      - ${DEPLOYMENT_ROOT:-/volume1/docker}:${DEPLOYMENT_ROOT:-/volume1/docker}
+      # Configuration directory (read-only)
+      - ./config:/app/config:ro
+      # Persistent storage for SQLite deployment history and logs
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8088/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
