@@ -38,3 +38,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+

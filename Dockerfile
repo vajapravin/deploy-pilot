@@ -18,10 +18,12 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN uv venv /opt/venv
 
-# Install project dependencies into virtual environment
-ENV UV_PROJECT_ENVIRONMENT=/opt/venv
-RUN uv venv /opt/venv && \
-    uv pip install --system --no-cache-dir .
+# Copy dependency manifests and source code
+COPY pyproject.toml README.md ./
+COPY app ./app
+
+# Install project and all dependencies into virtual environment
+RUN uv pip install --no-cache-dir .
 
 # Stage 2: Runtime
 FROM python:3.12-slim-bookworm AS runtime
@@ -80,3 +82,4 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
 
 # Launch production server via Uvicorn factory
 CMD ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8088"]
+
