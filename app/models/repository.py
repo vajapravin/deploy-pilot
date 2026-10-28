@@ -8,6 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 IDENTIFIER_REGEX = re.compile(r"^[a-zA-Z0-9._-]+$")
+BRANCH_REGEX = re.compile(r"^(?!.*\.\.)[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)*$")
 
 
 class HealthCheckConfig(BaseModel):
@@ -47,7 +48,7 @@ class RepositoryConfig(BaseModel):
         default_factory=list, description="Approved pre- or post-flight validation commands"
     )
 
-    @field_validator("id", "name", "owner", "branch")
+    @field_validator("id", "name", "owner")
     @classmethod
     def validate_safe_identifiers(cls, value: str, info: object) -> str:
         """Ensure identifiers contain only safe characters (prevent injection)."""
@@ -56,6 +57,17 @@ class RepositoryConfig(BaseModel):
             raise ValueError(
                 f"Field '{field_name}' contains unsafe characters: '{value}'. "
                 "Must match [a-zA-Z0-9._-]+"
+            )
+        return value
+
+    @field_validator("branch")
+    @classmethod
+    def validate_safe_branch(cls, value: str) -> str:
+        """Ensure branch names contain only safe Git ref characters and valid hierarchy."""
+        if not BRANCH_REGEX.match(value) or value.endswith(".lock"):
+            raise ValueError(
+                f"Field 'branch' contains unsafe characters: '{value}'. "
+                "Must be a valid branch name matching [a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)*"
             )
         return value
 

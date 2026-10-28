@@ -186,6 +186,29 @@ def test_unsafe_identifier_characters_rejected() -> None:
             branch="main; reboot",
         )
 
+    # Valid hierarchical branches should be accepted
+    repo_feat = RepositoryConfig(
+        id="app",
+        name="app",
+        owner="octocat",
+        expected_remote="https://github.com/octocat/app.git",
+        path=Path("/tmp"),
+        branch="feat/gemini-llm-working",
+    )
+    assert repo_feat.branch == "feat/gemini-llm-working"
+
+    # Unsafe branches with traversal or leading/trailing slashes must be rejected
+    for bad_branch in ["feat/../escape", "/leading", "trailing/", "double//slash"]:
+        with pytest.raises(ValidationError):
+            RepositoryConfig(
+                id="app",
+                name="app",
+                owner="octocat",
+                expected_remote="https://github.com/octocat/app.git",
+                path=Path("/tmp"),
+                branch=bad_branch,
+            )
+
 
 def test_invalid_compose_file_extension_rejected() -> None:
     """Ensure compose files without .yml or .yaml are rejected."""
