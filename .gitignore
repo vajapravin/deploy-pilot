@@ -45,3 +45,6 @@ data/
 *.db-journal
 *.db-wal
 *.db-shm
+
+config/repositories.yaml
+docker-compose.dev.yml

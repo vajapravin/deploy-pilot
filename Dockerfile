@@ -13,13 +13,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for fast, deterministic dependency resolution
 COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
 
-# Copy dependency manifests
-COPY pyproject.toml README.md ./
+# Set up virtual environment
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN uv venv /opt/venv
 
-# Install project dependencies into virtual environment
-ENV UV_PROJECT_ENVIRONMENT=/opt/venv
-RUN uv venv /opt/venv && \
-    uv pip install --no-cache-dir .
+# Copy dependency manifests and source code
+COPY pyproject.toml README.md ./
+COPY app ./app
+
+# Install project and all dependencies into virtual environment
+RUN uv pip install --no-cache-dir .
 
 # Stage 2: Runtime
 FROM python:3.12-slim-bookworm AS runtime
@@ -30,6 +34,7 @@ LABEL description="Secure GitHub Webhook-Based Docker Deployment Automation"
 # Configure Python execution environment
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH" \
     DEPLOYMENT_ROOT="/volume1/docker" \
     CONFIG_PATH="/app/config/repositories.yaml" \
@@ -64,7 +69,7 @@ RUN mkdir -p /app/config /app/data /volume1/docker
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv
 
-# Copy application source code
+# Copy application source code and default config
 COPY app /app/app
 COPY config /app/config.default
 
