@@ -11,13 +11,12 @@ services:
     env_file:
       - .env
     environment:
-      - PORT=8088
-      - HOST=0.0.0.0
-      - DEPLOYMENT_ROOT=${DEPLOYMENT_ROOT:-/volume1/docker}
-      - CONFIG_PATH=/app/config/repositories.yaml
-      - DATABASE_PATH=/app/data/deployments.db
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - DEPLOY_PILOT_PORT=8088
+      - DEPLOY_PILOT_HOST=0.0.0.0
+      - DEPLOY_PILOT_ALLOWED_DEPLOYMENT_ROOT=${DEPLOYMENT_ROOT:-/volume1/docker}
+      - DEPLOY_PILOT_CONFIG_FILE=/app/config/repositories.yaml
+      - DEPLOY_PILOT_DATABASE_PATH=/app/data/deploypilot.db
+      - DEPLOY_PILOT_LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       # Access host Docker daemon for compose operations
       - /var/run/docker.sock:/var/run/docker.sock

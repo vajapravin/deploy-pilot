@@ -119,7 +119,7 @@ WEBHOOK_SECRET=your_super_secret_github_webhook_token_32chars
 API_AUTH_TOKEN=your_internal_management_api_key_32chars
 DEPLOYMENT_ROOT=/volume1/docker
 CONFIG_PATH=/app/config/repositories.yaml
-DATABASE_PATH=/app/data/deployments.db
+DATABASE_PATH=/app/data/deploypilot.db
 LOG_LEVEL=INFO
 LOG_FORMAT=json
 MAX_CONCURRENT_BUILDS=2
@@ -213,9 +213,9 @@ DeployPilot intentionally refused to overwrite files modified directly on the NA
 5. Trigger a new commit or redeliver the webhook from GitHub's webhook history.
 
 ### Querying SQLite Deployment History
-DeployPilot maintains deployment logs in `/volume1/docker/deploy-pilot/data/deployments.db`:
+DeployPilot maintains deployment logs in `/volume1/docker/deploy-pilot/data/deploypilot.db`:
 ```bash
-sqlite3 /volume1/docker/deploy-pilot/data/deployments.db \
+sqlite3 /volume1/docker/deploy-pilot/data/deploypilot.db \
   "SELECT id, repository_id, branch, status, duration_seconds, started_at FROM deployments ORDER BY started_at DESC LIMIT 5;"
 ```
 
