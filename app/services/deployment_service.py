@@ -96,11 +96,13 @@ class DeploymentService:
                 return
 
             record.started_at = datetime.now(UTC).isoformat()
+            logger.info("Executing deployment %s for repository '%s'...", record.id, repo.id)
 
             try:
                 # 1. State: VALIDATING
                 record.state = DeploymentState.VALIDATING
                 self.storage.update_deployment(record)
+                logger.info("Deployment %s: Validating repository state...", record.id)
 
                 await self.git_service.verify_repository(repo.path)
                 await self.git_service.verify_remote(repo.path, repo.expected_remote)
@@ -110,6 +112,11 @@ class DeploymentService:
                 # 2. State: FETCHING
                 record.state = DeploymentState.FETCHING
                 self.storage.update_deployment(record)
+                logger.info(
+                    "Deployment %s: Fetching and checking out branch '%s'...",
+                    record.id,
+                    repo.branch,
+                )
 
                 await self.git_service.fetch_branch(repo.path, repo.branch)
                 verified_sha = await self.git_service.verify_commit_in_branch(
@@ -119,10 +126,14 @@ class DeploymentService:
                     repo.path, repo.branch, verified_sha
                 )
                 record.deployed_commit = deployed_sha
+                logger.info(
+                    "Deployment %s: Successfully checked out commit %s", record.id, deployed_sha[:8]
+                )
 
                 # 3. State: BUILDING
                 record.state = DeploymentState.BUILDING
                 self.storage.update_deployment(record)
+                logger.info("Deployment %s: Executing docker compose up --build -d...", record.id)
 
                 docker_res = await self.docker_service.execute_compose_up(repo)
                 record.docker_exit_code = docker_res.exit_code
@@ -134,6 +145,12 @@ class DeploymentService:
 
                 record.health_status = docker_res.health_status
                 record.state = DeploymentState.SUCCEEDED
+                logger.info(
+                    "Deployment %s for repository '%s' SUCCEEDED (duration: %.2fs)",
+                    record.id,
+                    repo.id,
+                    time.monotonic() - start_mono,
+                )
 
             except (GitServiceError, DockerServiceError) as err:
                 logger.error(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -9,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from app.services.deployment_service import DeploymentService
 from app.services.webhook_service import WebhookService
 
+logger = logging.getLogger("deploypilot.webhooks")
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
 
@@ -32,11 +34,16 @@ async def handle_github_webhook(request: Request, response: Response) -> dict[st
 
     # 2. Handle ping event
     if result.reason == "ping_acknowledged":
+        logger.info("Received GitHub ping event - acknowledged with 200 OK")
         response.status_code = 200
         return {"status": "ping_acknowledged"}
 
     # 3. Handle duplicates
     if result.status == "duplicate":
+        logger.info(
+            "Ignored duplicate delivery: delivery_id=%s (already processed)",
+            result.delivery_id,
+        )
         response.status_code = 200
         return {
             "status": "duplicate_ignored",
@@ -52,6 +59,13 @@ async def handle_github_webhook(request: Request, response: Response) -> dict[st
         repo=result.repository,
         requested_commit=result.payload.after,
         delivery_id=result.delivery_id,
+    )
+    logger.info(
+        "Successfully queued deployment %s for repository '%s' (branch: %s, commit: %s)",
+        record.id,
+        record.repository_id,
+        record.branch,
+        record.requested_commit[:8],
     )
 
     response.status_code = 202
