@@ -7,6 +7,7 @@ WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    git \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -60,10 +61,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" \
-       > /etc/apt/sources.list.d/docker.list \
+    > /etc/apt/sources.list.d/docker.list \
     && apt-get update && apt-get install -y --no-install-recommends \
-       docker-ce-cli \
-       docker-compose-plugin \
+    docker-ce-cli \
+    docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure Git to trust all mounted directories across host UID boundaries
