@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Configure Git to trust all mounted directories across host UID boundaries
+RUN git config --global --add safe.directory "*"
+
 # Install uv for fast, deterministic dependency resolution
 COPY --from=ghcr.io/astral-sh/uv:0.5.26 /uv /uvx /bin/
 
@@ -62,6 +65,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        docker-ce-cli \
        docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure Git to trust all mounted directories across host UID boundaries
+RUN git config --global --add safe.directory "*"
 
 # Create application directories
 RUN mkdir -p /app/config /app/data /volume1/docker

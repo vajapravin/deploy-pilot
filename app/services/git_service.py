@@ -66,7 +66,7 @@ class GitService:
     ) -> str:
         """Run a git command in the repository path within its own process group."""
         timeout = self.default_timeout_seconds if timeout_seconds is None else timeout_seconds
-        cmd = ["git", "-C", repo_path.as_posix(), *args]
+        cmd = ["git", "-c", "safe.directory=*", "-C", repo_path.as_posix(), *args]
 
         proc = await asyncio.create_subprocess_exec(
             *cmd,
